@@ -1,0 +1,164 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                  String       @id @default(uuid())
+  firebaseUid         String       @unique
+  email               String?      @unique
+  phone               String?      @unique
+  username            String?      @unique
+  provider            AuthProvider
+  role                UserRole     @default(USER)
+  status              UserStatus   @default(ACTIVE)
+  isEmailVerified     Boolean      @default(false)
+  isPhoneVerified     Boolean      @default(false)
+  profileCompleted    Boolean      @default(false)
+  onboardingCompleted Boolean      @default(false)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  profile            Profile?
+  sessions           Session[]
+  emailVerifications EmailVerification[]
+  authLogs           AuthLog[]
+
+  @@index([email])
+  @@index([phone])
+  @@index([username])
+  @@index([firebaseUid])
+  @@index([createdAt])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model Profile {
+  id             String    @id @default(uuid())
+  userId         String    @unique
+  fullName       String?
+  gender         String?
+  dateOfBirth    DateTime?
+  profilePicture String?
+  bio            String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model EmailVerification {
+  id        String   @id @default(uuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tokenHash])
+  @@index([expiresAt])
+}
+
+model Session {
+  id                  String   @id @default(uuid())
+  userId              String
+  refreshTokenHash    String   @unique
+  replacedByTokenHash String?
+  isRevoked           Boolean  @default(false)
+  expiresAt           DateTime
+  deviceInfo          String?
+  ipAddress           String?
+  createdAt           DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model AuthLog {
+  id        String        @id @default(uuid())
+  userId    String?
+  action    AuthAction
+  ipAddress String?
+  userAgent String?
+  status    AuthLogStatus
+  reason    String?
+  createdAt DateTime      @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+enum AuthProvider {
+  PHONE
+  GOOGLE
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+  DELETED
+}
+
+enum AuthAction {
+  LOGIN
+  LOGOUT
+  LOGOUT_ALL
+  REFRESH
+  VERIFY_EMAIL
+  VERIFY_OTP
+  REGISTER
+}
+
+enum AuthLogStatus {
+  SUCCESS
+  FAILURE
+}
+
+// Future Placeholder Models for Dating Features
+model UserPhoto {
+  id        String   @id @default(uuid())
+  userId    String
+  url       String
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Note: Add relation to User model when implemented
+}
+
+model UserInterest {
+  id       String @id @default(uuid())
+  userId   String
+  interest String
+
+  // Note: Add relation to User model when implemented
+}
+
+model UserPreference {
+  id     String @id @default(uuid())
+  userId String
+
+  minAge   Int?
+  maxAge   Int?
+  distance Int?
+
+  // Note: Add relation to User model when implemented
+}
