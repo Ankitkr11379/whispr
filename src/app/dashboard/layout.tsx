@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getAuthenticatedUser } from '@/lib/auth/server';
-
+export const dynamic = 'force-dynamic';
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getAuthenticatedUser();
 
