@@ -1,6 +1,6 @@
 import { getAuthenticatedUser } from '@/lib/auth/server';
 import Link from 'next/link';
-
+export const dynamic = 'force-dynamic';
 export default async function DashboardPage() {
   const user = await getAuthenticatedUser();
   if (!user) return null;
