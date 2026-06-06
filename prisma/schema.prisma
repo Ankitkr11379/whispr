@@ -30,6 +30,10 @@ model User {
   sessions           Session[]
   emailVerifications EmailVerification[]
   authLogs           AuthLog[]
+  photos             UserPhoto[]
+  interests          UserInterest[]
+  skills             UserSkill[]
+  preference         UserPreference?
 
   @@index([email])
   @@index([phone])
@@ -133,7 +137,6 @@ enum AuthLogStatus {
   FAILURE
 }
 
-// Future Placeholder Models for Dating Features
 model UserPhoto {
   id        String   @id @default(uuid())
   userId    String
@@ -141,7 +144,7 @@ model UserPhoto {
   isPrimary Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  // Note: Add relation to User model when implemented
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model UserInterest {
@@ -149,16 +152,29 @@ model UserInterest {
   userId   String
   interest String
 
-  // Note: Add relation to User model when implemented
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, interest])
+}
+
+model UserSkill {
+  id       String @id @default(uuid())
+  userId   String
+  skill    String
+
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, skill])
 }
 
 model UserPreference {
-  id     String @id @default(uuid())
-  userId String
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  minAge           Int?
+  maxAge           Int?
+  distance         Int?
+  lookingFor       String?
+  preferredGenders String[]
 
-  minAge   Int?
-  maxAge   Int?
-  distance Int?
-
-  // Note: Add relation to User model when implemented
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

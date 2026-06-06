@@ -26,16 +26,21 @@ export class AuthService {
         throw new Error('User account is ' + existingUser.status.toLowerCase());
       }
 
-      const refreshToken = await generateRefreshToken({
+      const tokenPayloadBase = {
         userId: existingUser.id,
         role: existingUser.role,
-      });
+        provider: existingUser.provider,
+        isEmailVerified: existingUser.isEmailVerified,
+        isPhoneVerified: existingUser.isPhoneVerified,
+        onboardingCompleted: existingUser.onboardingCompleted,
+      };
+
+      const refreshToken = await generateRefreshToken(tokenPayloadBase);
       
       const session = await SessionRepository.createSession(existingUser.id, refreshToken, userAgent, ipAddress);
       
       const accessToken = await generateAccessToken({
-        userId: existingUser.id,
-        role: existingUser.role,
+        ...tokenPayloadBase,
         sessionId: session.id,
       });
 

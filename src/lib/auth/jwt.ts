@@ -8,6 +8,10 @@ export interface TokenPayload {
   userId: string;
   role: string;
   sessionId: string;
+  provider: string;
+  isEmailVerified: boolean;
+  isPhoneVerified: boolean;
+  onboardingCompleted: boolean;
 }
 
 export const generateAccessToken = async (payload: TokenPayload) => {

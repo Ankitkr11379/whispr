@@ -36,8 +36,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: { message: 'Session expired' } }, { status: 401 });
     }
 
-    // Token Rotation
-    const newRefreshToken = await generateRefreshToken({ userId: payload.userId, role: payload.role });
+    // Token Rotation — fetch fresh user data to reflect any DB updates (e.g. onboardingCompleted)
+    const freshUser = await prisma.user.findUnique({ where: { id: payload.userId } });
+    if (!freshUser) {
+      return NextResponse.json({ success: false, error: { message: 'User not found' } }, { status: 401 });
+    }
+
+    const tokenPayloadBase = {
+      userId: freshUser.id,
+      role: freshUser.role,
+      provider: freshUser.provider,
+      isEmailVerified: freshUser.isEmailVerified,
+      isPhoneVerified: freshUser.isPhoneVerified,
+      onboardingCompleted: freshUser.onboardingCompleted,
+    };
+
+    const newRefreshToken = await generateRefreshToken(tokenPayloadBase);
     const ipAddress = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
     const userAgent = req.headers.get('user-agent') || 'unknown';
 
@@ -47,8 +61,7 @@ export async function POST(req: NextRequest) {
     const newSession = await SessionRepository.createSession(payload.userId, newRefreshToken, userAgent, ipAddress);
 
     const newAccessToken = await generateAccessToken({
-      userId: payload.userId,
-      role: payload.role,
+      ...tokenPayloadBase,
       sessionId: newSession.id,
     });
 

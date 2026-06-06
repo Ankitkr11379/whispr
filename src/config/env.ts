@@ -8,8 +8,7 @@ const serverSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(16),
   FIREBASE_PROJECT_ID: z.string().min(1),
   FIREBASE_CLIENT_EMAIL: z.string().email(),
-  FIREBASE_PRIVATE_KEY: z.string().min(1),
-  RESEND_API_KEY: z.string().min(1),
+  FIREBASE_PRIVATE_KEY: z.string().min(1).transform(key => key.replace(/\\n/g, '\n')),  RESEND_API_KEY: z.string().min(1),
   EMAIL_FROM: z.string().email(),
 });
 

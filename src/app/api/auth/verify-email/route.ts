@@ -48,9 +48,24 @@ export async function POST(req: NextRequest) {
       data: { userId: verification.userId, action: 'VERIFY_EMAIL', ipAddress, userAgent, status: 'SUCCESS' }
     });
 
-    const refreshToken = await generateRefreshToken({ userId: verification.userId, role: verification.user.role });
+    const refreshToken = await generateRefreshToken({
+      userId: verification.userId,
+      role: verification.user.role,
+      provider: verification.user.provider,
+      isEmailVerified: true, // just verified
+      isPhoneVerified: verification.user.isPhoneVerified,
+      onboardingCompleted: verification.user.onboardingCompleted,
+    });
     const session = await SessionRepository.createSession(verification.userId, refreshToken, userAgent, ipAddress);
-    const accessToken = await generateAccessToken({ userId: verification.userId, role: verification.user.role, sessionId: session.id });
+    const accessToken = await generateAccessToken({
+      userId: verification.userId,
+      role: verification.user.role,
+      sessionId: session.id,
+      provider: verification.user.provider,
+      isEmailVerified: true, // just verified
+      isPhoneVerified: verification.user.isPhoneVerified,
+      onboardingCompleted: verification.user.onboardingCompleted,
+    });
 
     const cookieStore = await cookies();
     cookieStore.set('access_token', accessToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 15 * 60, path: '/' });
